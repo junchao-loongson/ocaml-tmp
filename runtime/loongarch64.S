@@ -259,7 +259,7 @@ caml_system__code_begin:
 
 FUNCTION(caml_call_realloc_stack)
     /* Save return address */
-        CFI_OFFSET($ra, -8)
+        //CFI_OFFSET($ra, -8)
         addi.d    $sp, $sp, -16
 		st.d      $ra, $sp, 8 
         CFI_ADJUST(16)
@@ -287,7 +287,7 @@ END_FUNCTION(caml_call_realloc_stack)
 FUNCTION(caml_call_gc)
 L(caml_call_gc):
     /* Save return address */
-        CFI_OFFSET($ra, -8)
+        //CFI_OFFSET($ra, -8)
         addi.d    $sp, $sp, -16
 		st.d      $ra, $sp, 8 
         CFI_ADJUST(16)
@@ -336,7 +336,7 @@ END_FUNCTION(caml_allocN)
 /* Function to call is in ADDITIONAL_ARG */
 
 FUNCTION(caml_c_call)
-        CFI_OFFSET($ra, -8)
+        //CFI_OFFSET($ra, -8)
         addi.d    $sp, $sp, -16
 		st.d      $ra, $sp, 8 
         CFI_ADJUST(16)
@@ -363,7 +363,7 @@ FUNCTION(caml_c_call_stack_args)
         C function   : ADDITIONAL_ARG
         C stack args : begin=STACK_ARG_BEGIN
                        end=STACK_ARG_END */
-        CFI_OFFSET($ra, -8)
+        //CFI_OFFSET($ra, -8)
         addi.d    $sp, $sp, -16
 		st.d      $ra, $sp, 8 
         CFI_ADJUST(16)
@@ -413,7 +413,7 @@ FUNCTION(caml_start_program)
 
 L(jump_to_caml):
     /* Set up stack frame and save callee-save registers */
-        CFI_OFFSET($ra, -200)
+        //CFI_OFFSET($ra, -200)
         addi.d    $sp, $sp, -208
 		st.d      $ra, $sp, 8 
         CFI_ADJUST(208)
@@ -702,7 +702,7 @@ FUNCTION(caml_reperform)
     /*  $a0: effect to perform
         $a1: continuation
         a2: last_fiber */
-        ld.d      TMP, Stack_handler_from_cont(a2)
+        ld.d      TMP, Stack_handler_from_cont($a2)
         ld.d      $a2, Caml_state(current_stack) /* a2 := old stack */
         st.d      $a2, Handler_parent(TMP) /* Append to last_fiber */
         addi.d    $a3, $a2, 1 /* a3 (last_fiber) := Val_ptr(old stack) */
@@ -738,7 +738,7 @@ FUNCTION(caml_runstack)
     /*  $a0: fiber
         $a1: fun
         a2: arg */
-        CFI_OFFSET($ra, -8)
+        //CFI_OFFSET($ra, -8)
         addi.d    $sp, $sp, -16
 		st.d      $ra, $sp, 8 
         CFI_ADJUST(16)
