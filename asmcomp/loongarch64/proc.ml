@@ -65,20 +65,16 @@ let word_addressed = false
 *)
 
 let int_reg_name =
-  [| "a0"; "a1"; "a2"; "a3"; "a4"; "a5"; "a6"; "a7";  (* 0 - 7 *)
-     "s2"; "s3"; "s4"; "s5"; "s6"; "s7"; "s8"; "s9";  (* 8 - 15 *)
-     "t2"; "t3"; "t4"; "t5"; "t6";                    (* 16 - 20 *)
-     "s0";                                            (* 21 *)
-     "t0"; "t1";                                      (* 22 - 23 *)
-     "s1"; "s10"; "s11" |]                            (* 24 - 26 *)
+    [|"$t0"; "$t1"; "$t2"; "$t3"; "$t4"; "$t5"; "$t6"; "$t7"; "$t8";   (* 0- 8 *)
+      "$a0"; "$a1"; "$a2"; "$a3"; "$a4"; "$a5"; "$a6"; "$a7"; "$ra";     (* 9-17 *)
+      "$s0"; "$s1"; "$s2"; "$s3"; "$s4"; "$s5"; "$s6"; "$s7"; "$s8"|]   (* 18-26*)
 
 let float_reg_name =
-  [| "ft0"; "ft1"; "ft2"; "ft3"; "ft4"; "ft5"; "ft6"; "ft7";
-     "fs0"; "fs1";
-     "fa0"; "fa1"; "fa2"; "fa3"; "fa4"; "fa5"; "fa6"; "fa7";
-     "fs2"; "fs3"; "fs4"; "fs5"; "fs6"; "fs7"; "fs8"; "fs9"; "fs10"; "fs11";
-     "ft8"; "ft9"; "ft10"; "ft11" |]
-
+  [| "$fa0"; "$fa1"; "$fa2"; "$fa3"; "$fa4"; "$fa5"; "$fa6"; "$fa7";
+     "$fv0"; "$fv1";
+     "$ft0"; "$ft1"; "$ft2"; "$ft3"; "$ft4"; "$ft5"; "$ft6"; "$ft7";
+     "$ft8"; "$ft9"; "$ft10"; "$ft11"; "$ft12"; "$ft13"; "$ft14"; "$ft15";
+     "$fs0"; "$fs1"; "$fs2"; "$fs3"; "$fs4"; "$fs5"; "$fs6"; "$fs7" |]
 let num_register_classes = 2
 
 let register_class r =
@@ -86,7 +82,7 @@ let register_class r =
   | Val | Int | Addr -> 0
   | Float -> 1
 
-let num_available_registers = [| 22; 32 |]
+let num_available_registers = [| 27; 32 |]
 
 let first_available_register = [| 0; 100 |]
 
@@ -98,8 +94,8 @@ let rotate_registers = true
 (* Representation of hard registers by pseudo-registers *)
 
 let hard_int_reg =
-  let v = Array.make 27 Reg.dummy in
-  for i = 0 to 26 do
+  let v = Array.make 28 Reg.dummy in
+  for i = 0 to 27 do
     v.(i) <- Reg.at_location Int (Reg i)
   done;
   v
@@ -170,17 +166,17 @@ let max_arguments_for_tailcalls = 16 (* in regs *) + 64 (* in domain state *)
    Return values in a0 .. a7, s2 .. s9 or fa0 .. fa7, fs2 .. fs9. *)
 
 let loc_arguments arg =
-  calling_conventions 0 15 110 125 outgoing (- size_domainstate_args) arg
+  calling_conventions 9 16 100 107 outgoing (- size_domainstate_args) arg
 
 let loc_parameters arg =
   let (loc, _ofs) =
-    calling_conventions 0 15 110 125 incoming (- size_domainstate_args) arg
+    calling_conventions 9 16 100 107 incoming (- size_domainstate_args) arg
   in
   loc
 
 let loc_results res =
   let (loc, _ofs) =
-    calling_conventions 0 15 110 125 not_supported 0 res
+    calling_conventions 9 16 100 107 not_supported 0 res
   in
   loc
 
@@ -224,10 +220,10 @@ let external_calling_conventions
 
 let loc_external_arguments ty_args =
   let arg = Cmm.machtype_of_exttype_list ty_args in
-  external_calling_conventions 0 7 110 117 outgoing arg
+  external_calling_conventions 9 16 100 107 outgoing arg
 
 let loc_external_results res =
-  let (loc, _ofs) = calling_conventions 0 1 110 111 not_supported 0 res
+  let (loc, _ofs) = calling_conventions 9 10 100 101 not_supported 0 res
   in loc
 
 (* Exceptions are in a0 *)
@@ -244,13 +240,14 @@ let destroyed_at_c_noalloc_call =
   (* s0-s11 and fs0-fs11 are callee-save, but s0 is
      used to preserve OCaml sp. *)
   Array.of_list(List.map phys_reg
-    [0; 1; 2; 3; 4; 5; 6; 7; 16; 17; 18; 19; 20; 21 (* s0 *);
-     100; 101; 102; 103; 104; 105; 106; 107; 110; 111; 112; 113; 114; 115; 116;
-     117; 128; 129; 130; 131])
+    [0; 1; 2; 3; 4; 5; 6; 7; 8; 9; 10; 11; 12; 13; 14; 15; 16; 17; 18;
+     100; 101; 102; 103; 104; 105; 106; 107; 108; 109; 110; 111; 112; 113; 114;
+     115; 116; 117; 118; 119; 120; 121; 122; 123])
+(* FIXME *)
 
 let destroyed_at_alloc =
   (* t0-t6 are used for PLT stubs *)
-  if !Clflags.dlcode then Array.map phys_reg [|16; 17; 18; 19; 20|]
+  if !Clflags.dlcode then Array.map phys_reg [|2; 3; 4; 5; 6; 7; 8|]
   else [| phys_reg 16 |] (* t2 is used to pass the argument to caml_allocN *)
 
 let destroyed_at_oper = function
@@ -270,8 +267,8 @@ let destroyed_at_reloadretaddr = [| |]
 (* Maximal register pressure *)
 
 let safe_register_pressure = function
-  | Iextcall _ -> 9
-  | _ -> 23
+  | Iextcall _ -> 21 (* s3 *)
+  | _ -> 1     (* t1 *)
 
 let max_register_pressure = function
   | Iextcall _ -> [| 9; 12 |]
