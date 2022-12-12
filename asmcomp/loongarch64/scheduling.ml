@@ -1,4 +1,4 @@
-# 2 "asmcomp/riscv/scheduling.ml"
+# 2 "asmcomp/loongarch64/scheduling.ml"
 (**************************************************************************)
 (*                                                                        *)
 (*                                 OCaml                                  *)

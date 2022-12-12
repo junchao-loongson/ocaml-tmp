@@ -54,8 +54,8 @@ let slot_offset env loc cls =
 
 let emit_jump op s =
   if !Clflags.dlcode || !Clflags.pic_code
-  then `{emit_string op}	%plt({emit_symbol s})`
-  else `{emit_string op}	{emit_symbol s}`
+  then `{emit_string op}	%plt({emit_symbol s})`  (* FIXME *)
+  else `{emit_string op}	%plt({emit_symbol s})`  (* FIXME *)
 
 let emit_call = emit_jump "bl" 
 let emit_tail = emit_jump "bl" (* FIXME *)
@@ -265,7 +265,7 @@ let emit_instr env i =
             `	move      {emit_reg dst}, {emit_reg src}\n`
         | {loc = Reg _; typ = Float}, {loc = Reg _; typ = Float} ->
             `	fmov.d   {emit_reg dst}, {emit_reg src}\n`
-        | {loc = Reg _; typ = Float}, {loc = Reg _; typ = (Val | Int | Addr)} ->
+        | {loc = Reg _; typ = Float}, {loc = Reg _; typ = (Val | Int | Addr)} ->    (* FIXME *)
             `	fmv.x.d {emit_reg dst}, {emit_reg src}\n`
         | {loc = Reg _; typ = (Val | Int | Addr)}, {loc = Stack s} ->
             let (base, ofs) = slot_offset env s (register_class dst) in
@@ -291,7 +291,7 @@ let emit_instr env i =
       `la.global {emit_reg reg_tmp}, {emit_label lbl} \n`;      (* FIXME *)
       `	fld.d	{emit_reg i.res.(0)}, {emit_reg reg_tmp}, 0\n`
   | Lop(Iconst_symbol s) ->
-      `	la.local	{emit_reg i.res.(0)}, {emit_symbol s}\n`
+      `	la.global	{emit_reg i.res.(0)}, {emit_symbol s}\n`    (* FIXME *)
   | Lop(Icall_ind) ->
       `	jirl	$ra, {emit_reg i.arg.(0)}, 0\n`;
       record_frame env i.live (Dbg_other i.dbg)
@@ -556,7 +556,7 @@ let emit_instr env i =
       end
   | Lswitch jumptbl ->
       let lbl = new_label() in
-      `	la.local	{emit_reg reg_tmp}, {emit_label lbl}\n`;
+      `	la.global	{emit_reg reg_tmp}, {emit_label lbl}\n`;    (* FIXME *)
       `	slli.d	$t0, {emit_reg i.arg.(0)}, 2\n`;
       `	add.d	{emit_reg reg_tmp}, {emit_reg reg_tmp}, $t0\n`;
       `	jr	{emit_reg reg_tmp}\n`;
@@ -571,8 +571,8 @@ let emit_instr env i =
       let delta = 16 * delta_traps in
       cfi_adjust_cfa_offset delta;
       env.stack_offset <- env.stack_offset + delta
-  | Lpushtrap {lbl_handler} ->
-      `	la	{emit_reg reg_tmp}, {emit_label lbl_handler}\n`;
+  | Lpushtrap {lbl_handler} ->      (* FIXME *)
+      `	la.global	{emit_reg reg_tmp}, {emit_label lbl_handler}\n`;
       `	addi.d	$sp, $sp, -16\n`;
       env.stack_offset <- env.stack_offset + 16;
       `	st.d	{emit_reg reg_trap_ptr}, $sp, 0\n`;
@@ -752,3 +752,4 @@ let end_assembly() =
       efa_def_label = (fun l -> `{emit_label l}:\n`);
       efa_string = (fun s -> emit_bytes_directive "	.byte	" (s ^ "\000"))
      }
+    `.end`

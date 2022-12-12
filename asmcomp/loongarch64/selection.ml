@@ -1,4 +1,4 @@
-# 2 "asmcomp/riscv/selection.ml"
+# 2 "asmcomp/loongarch64/selection.ml"
 (**************************************************************************)
 (*                                                                        *)
 (*                                 OCaml                                  *)

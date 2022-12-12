@@ -33,7 +33,8 @@
 #define C_ARG_4 $a3
 
 /* Support for CFI directives */
-
+//FIXME
+#undef ASM_CFI_SUPPORTED
 #if defined(ASM_CFI_SUPPORTED)
 #define CFI_STARTPROC .cfi_startproc
 #define CFI_ENDPROC .cfi_endproc
@@ -58,13 +59,14 @@
         .set    domain_curr_cnt, 0
 #define DOMAIN_STATE(c_type, name) \
         .equ    domain_field_caml_##name, domain_curr_field ; \
-        .set    domain_curr_cnt, domain_curr_cnt + 1
+        .set    domain_curr_cnt, domain_curr_cnt + 1;    \
         .set    domain_curr_field, domain_curr_cnt*8
 #include "../runtime/caml/domain_state.tbl"
 #undef DOMAIN_STATE
 
 #define Caml_state(var) DOMAIN_STATE_PTR, 0
-//#define Caml_state(var) DOMAIN_STATE_PTR, domain_field_caml_##var
+//#define Caml_state_pre(var) la.got DOMAIN_STATE_PTR, domain_field_caml_##var
+#define Caml_state_pre(var)
 
 /* Globals and labels */
 #define L(lbl) .L##lbl
@@ -82,8 +84,9 @@ name:; \
 
 #if defined(__PIC__)
 #define PLT(r) %plt(r)
+// #define PLT(r) r
 #else
-#define PLT(r) r
+#define PLT(r) %plt(r)
 #endif
 
 #define OBJECT(name) \
@@ -117,9 +120,11 @@ name:
 /* Switch from OCaml to C stack. */
 .macro SWITCH_OCAML_TO_C
     /* Fill in Caml_state->current_stack->$sp */
+        Caml_state_pre(current_stack)
         ld.d      TMP, Caml_state(current_stack)
         st.d      $sp, Stack_sp(TMP)
     /* Fill in Caml_state->c_stack */
+        Caml_state_pre(c_stack)
         ld.d      TMP2, Caml_state(c_stack)
         st.d      TMP, Cstack_stack(TMP2)
         st.d      $sp, Cstack_sp(TMP2)
@@ -140,11 +145,15 @@ name:
  */
 .macro SAVE_ALL_REGS
     /* First, save the young_ptr & exn_handler */
+        Caml_state_pre(young_ptr)
         st.d      ALLOC_PTR, Caml_state(young_ptr)
+        Caml_state_pre(exn_handler)
         st.d      TRAP_PTR, Caml_state(exn_handler)
     /* Now, use TMP to point to the gc_regs bucket */
+        Caml_state_pre(gc_regs_buckets)
         ld.d      TMP, Caml_state(gc_regs_buckets)
 		ld.d      TMP2, TMP, 0  /* next ptr */
+        Caml_state_pre(gc_regs_buckets)
         st.d      TMP2, Caml_state(gc_regs_buckets)
     /* Save allocatable integer registers */
         st.d      $a0, TMP, 2*8
@@ -191,6 +200,7 @@ name:
         fst.d     $ft10, TMP, 42*8
         fst.d     $ft11, TMP, 43*8
         addi.d    TMP, TMP, 16
+        Caml_state_pre(gc_regs)
         st.d      TMP, Caml_state(gc_regs)
 .endm
 
@@ -198,6 +208,7 @@ name:
    and refreshing ALLOC_PTR & TRAP_PTR from Caml_state */
 .macro RESTORE_ALL_REGS
     /* Restore $a0, $a1, freeing up the next ptr slot */
+        Caml_state_pre(gc_regs)
         ld.d      TMP, Caml_state(gc_regs)
         addi.d    TMP, TMP, -16
     /* Restore registers */
@@ -280,7 +291,7 @@ FUNCTION(caml_call_realloc_stack)
 		ld.d      $ra, $sp, 8 
         addi.d    $sp, $sp, 16
         addi.d    $sp, $sp, 16 /* pop argument */
-        la      $a0, caml_exn_Stack_overflow
+        la.global      $a0, caml_exn_Stack_overflow
         b       caml_raise_exn
 END_FUNCTION(caml_call_realloc_stack)
 
@@ -404,7 +415,7 @@ END_FUNCTION(caml_c_call_stack_args)
 FUNCTION(caml_start_program)
     /* domain state is passed as arg from C */
         move      TMP, C_ARG_1
-        la      TMP2, caml_program
+        la.global      TMP2, caml_program
 
 /* Code shared with caml_callback* */
 /* Address of domain state is in TMP */
@@ -458,7 +469,7 @@ L(jump_to_caml):
 		st.d      $sp, $t2, 0  /* C_stack_sp */
     /* Setup a trap frame to catch exceptions escaping the OCaml code */
         ld.d      $t3, Caml_state(exn_handler)
-        la.local      $t4, L(trap_handler)
+        la.global      $t4, L(trap_handler)     //FIXME
         addi.d    $t2, $t2, -16
 		st.d      $t3, $t2, 0 
 		st.d      $t4, $t2, 8 
@@ -756,7 +767,7 @@ FUNCTION(caml_runstack)
     /* Create an exception handler on the target stack
        after 16byte DWARF & gc_regs block (which is unused here) */
         addi.d    $t3, $t3, -32
-        la.local      TMP, L(fiber_exn_handler)
+        la.global      TMP, L(fiber_exn_handler) //FIXME
 		st.d      TMP, $t3, 8 
     /* link the previous exn_handler so that copying stacks works */
         ld.d      TMP, Stack_exception($a0)
@@ -827,3 +838,4 @@ OBJECT(caml_system.frametable)
         .short  0                 /* no roots */
         .align  3
 END_OBJECT(caml_system.frametable)
+.end

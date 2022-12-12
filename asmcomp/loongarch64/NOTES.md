@@ -2,15 +2,15 @@
 
 RISC-V in 64-bit mode, general variant, a.k.a `RV64G`.
 
-Debian architecture name: `riscv64`
+Debian architecture name: `loongarch6464`
 
 # Reference documents
 
 * Instruction set specification:
-  - https://riscv.org/technical/specifications/
+  - https://loongarch64.org/technical/specifications/
 
 * ELF ABI specification:
-  - https://github.com/riscv-non-isa/riscv-elf-psabi-doc/blob/master/riscv-elf.adoc
+  - https://github.com/loongarch64-non-isa/loongarch64-elf-psabi-doc/blob/master/loongarch64-elf.adoc
 
 * Assembly language manual
-  - https://github.com/riscv/riscv-asm-manual/blob/master/riscv-asm.md
+  - https://github.com/loongarch64/loongarch64-asm-manual/blob/master/loongarch64-asm.md

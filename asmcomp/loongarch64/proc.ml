@@ -1,4 +1,4 @@
-# 2 "asmcomp/riscv/proc.ml"
+# 2 "asmcomp/loongarch64/proc.ml"
 (**************************************************************************)
 (*                                                                        *)
 (*                                 OCaml                                  *)
@@ -285,7 +285,7 @@ let prologue_required fd =
   frame_required fd
 
 (* See
-   https://github.com/riscv-non-isa/riscv-elf-psabi-doc/blob/master/riscv-elf.adoc
+   https://github.com/loongarch64-non-isa/loongarch64-elf-psabi-doc/blob/master/loongarch64-elf.adoc
 *)
 
 let int_dwarf_reg_numbers =
