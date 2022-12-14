@@ -38,7 +38,7 @@
    (e.g. [intern_val]) may not allow context switching.
    Only generated assembly code can call [caml_garbage_collection],
    via the caml_call_gc assembly stubs.  */
-
+int cnt = 1;
 void caml_garbage_collection(void)
 {
   frame_descr* d;
@@ -49,7 +49,9 @@ void caml_garbage_collection(void)
   char * sp = (char*)stack->sp;
   Pop_frame_pointer(sp);
   uintnat retaddr = *(uintnat*)sp;
-
+  
+  fprintf(stderr, "#f %d\n", cnt);
+  cnt ++;
   /* Synchronise for the case when [young_limit] was used to interrupt
      us. */
   atomic_thread_fence(memory_order_acquire);

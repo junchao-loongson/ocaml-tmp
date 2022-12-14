@@ -57,14 +57,17 @@
 
         .set    domain_curr_field, 0
         .set    domain_curr_cnt, 0
-#define DOMAIN_STATE(c_type, name) \
-        .equ    domain_field_caml_##name, domain_curr_field ; \
+#define DOMAIN_STATE(c_type, name)
+        /*
+        .set    domain_field_caml_##name, domain_curr_field ; \
         .set    domain_curr_cnt, domain_curr_cnt + 1;    \
         .set    domain_curr_field, domain_curr_cnt*8
+        */
 #include "../runtime/caml/domain_state.tbl"
 #undef DOMAIN_STATE
 
-#define Caml_state(var) DOMAIN_STATE_PTR, 0
+//(* FIXME *)
+#define Caml_state(var) DOMAIN_STATE_PTR, domain_field_caml_##var
 //#define Caml_state_pre(var) la.got DOMAIN_STATE_PTR, domain_field_caml_##var
 #define Caml_state_pre(var)
 
@@ -86,7 +89,7 @@ name:; \
 #define PLT(r) %plt(r)
 // #define PLT(r) r
 #else
-#define PLT(r) %plt(r)
+#define PLT(r) r
 #endif
 
 #define OBJECT(name) \
@@ -120,11 +123,9 @@ name:
 /* Switch from OCaml to C stack. */
 .macro SWITCH_OCAML_TO_C
     /* Fill in Caml_state->current_stack->$sp */
-        Caml_state_pre(current_stack)
         ld.d      TMP, Caml_state(current_stack)
         st.d      $sp, Stack_sp(TMP)
     /* Fill in Caml_state->c_stack */
-        Caml_state_pre(c_stack)
         ld.d      TMP2, Caml_state(c_stack)
         st.d      TMP, Cstack_stack(TMP2)
         st.d      $sp, Cstack_sp(TMP2)
@@ -145,15 +146,11 @@ name:
  */
 .macro SAVE_ALL_REGS
     /* First, save the young_ptr & exn_handler */
-        Caml_state_pre(young_ptr)
         st.d      ALLOC_PTR, Caml_state(young_ptr)
-        Caml_state_pre(exn_handler)
         st.d      TRAP_PTR, Caml_state(exn_handler)
     /* Now, use TMP to point to the gc_regs bucket */
-        Caml_state_pre(gc_regs_buckets)
         ld.d      TMP, Caml_state(gc_regs_buckets)
 		ld.d      TMP2, TMP, 0  /* next ptr */
-        Caml_state_pre(gc_regs_buckets)
         st.d      TMP2, Caml_state(gc_regs_buckets)
     /* Save allocatable integer registers */
         st.d      $a0, TMP, 2*8
@@ -169,8 +166,8 @@ name:
         st.d      $s4, TMP, 12*8
         st.d      $s5, TMP, 13*8
         st.d      $s6, TMP, 14*8
-        st.d      $s7, TMP, 15*8
-        st.d      $s8, TMP, 16*8
+        st.d      $t7, TMP, 15*8
+        st.d      $t8, TMP, 16*8
         st.d      $t2, TMP, 18*8
         st.d      $t3, TMP, 19*8
         st.d      $t4, TMP, 20*8
@@ -199,8 +196,11 @@ name:
         fst.d     $ft9, TMP, 41*8
         fst.d     $ft10, TMP, 42*8
         fst.d     $ft11, TMP, 43*8
+        fst.d     $ft12, TMP, 44*8
+        fst.d     $ft13, TMP, 45*8
+        fst.d     $ft14, TMP, 46*8
+        fst.d     $ft14, TMP, 47*8
         addi.d    TMP, TMP, 16
-        Caml_state_pre(gc_regs)
         st.d      TMP, Caml_state(gc_regs)
 .endm
 
@@ -208,7 +208,6 @@ name:
    and refreshing ALLOC_PTR & TRAP_PTR from Caml_state */
 .macro RESTORE_ALL_REGS
     /* Restore $a0, $a1, freeing up the next ptr slot */
-        Caml_state_pre(gc_regs)
         ld.d      TMP, Caml_state(gc_regs)
         addi.d    TMP, TMP, -16
     /* Restore registers */
@@ -225,8 +224,8 @@ name:
         ld.d      $s4, TMP, 12*8
         ld.d      $s5, TMP, 13*8
         ld.d      $s6, TMP, 14*8
-        ld.d      $s7, TMP, 15*8
-        ld.d      $s8, TMP, 16*8
+        ld.d      $t7, TMP, 15*8
+        ld.d      $t8, TMP, 16*8
         ld.d      $t2, TMP, 18*8
         ld.d      $t3, TMP, 19*8
         ld.d      $t4, TMP, 20*8
@@ -253,6 +252,10 @@ name:
         fld.d     $ft9, TMP, 41*8
         fld.d     $ft10, TMP, 42*8
         fld.d     $ft11, TMP, 43*8
+        fld.d     $ft12, TMP, 44*8
+        fld.d     $ft13, TMP, 45*8
+        fld.d     $ft14, TMP, 46*8
+        fld.d     $ft14, TMP, 47*8
     /* Put gc_regs struct back in bucket linked list */
         ld.d      TMP2, Caml_state(gc_regs_buckets)
 		st.d      TMP2, TMP, 0  /* next ptr */
@@ -273,7 +276,7 @@ FUNCTION(caml_call_realloc_stack)
         //CFI_OFFSET($ra, -8)
         addi.d    $sp, $sp, -16
 		st.d      $ra, $sp, 8 
-        CFI_ADJUST(16)
+        //CFI_ADJUST(16)
     /* Save all registers (including ALLOC_PTR & TRAP_PTR) */
         SAVE_ALL_REGS
 		ld.d      C_ARG_1, $sp, 16  /* argument */

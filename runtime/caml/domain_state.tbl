@@ -14,116 +14,160 @@
 /*                                                                        */
 /**************************************************************************/
 
+#define domain_field_caml_young_limit 0
 DOMAIN_STATE(atomic_uintnat, young_limit)
 /* Minor heap limit. Typically young_limit == young_start, but this field is set
  * by other domains to signal this domain by causing a spurious allocation
  * failure. */
 
+#define domain_field_caml_young_ptr 8
 DOMAIN_STATE(value*, young_ptr)
 /* Minor heap pointer */
 
+#define domain_field_caml_young_start 16
 DOMAIN_STATE(value*, young_start)
 /* Start of the minor heap */
 
+#define domain_field_caml_young_end 24
 DOMAIN_STATE(value*, young_end)
 /* End of the minor heap. always(young_start <= young_ptr <= young_end) */
 
+#define domain_field_caml_current_stack 32
 DOMAIN_STATE(struct stack_info*, current_stack)
 /* Current stack */
 
+#define domain_field_caml_exn_handler 40
 DOMAIN_STATE(void*, exn_handler)
 /* Pointer into the current stack */
 
+#define domain_field_caml_action_pending 48
 DOMAIN_STATE(int, action_pending)
 /* Whether we are due to start the processing of delayable pending
    actions. See runtime/signal.c. */
 
+#define domain_field_caml_c_stack 56
 DOMAIN_STATE(struct c_stack_link*, c_stack)
 /* The C stack associated with this domain.
  * Used by this domain to perform external calls. */
 
+#define domain_field_caml_stack_cache 64
 DOMAIN_STATE(struct stack_info**, stack_cache)
 /* This is a list of freelist buckets of stacks */
 
+#define domain_field_caml_gc_regs_buckets 72
 DOMAIN_STATE(value*, gc_regs_buckets)
 /* Cache of free gc_regs buckets.
    Documented in fiber.h. */
 
+#define domain_field_caml_gc_regs 80
 DOMAIN_STATE(value*, gc_regs)
 /* Pointer to currently-used register bucket, or NULL.
    Documented in fiber.h. */
 
+#define domain_field_caml_minor_tables 88
 DOMAIN_STATE(struct caml_minor_tables*, minor_tables)
 
+#define domain_field_caml_mark_stack 96
 DOMAIN_STATE(struct mark_stack*, mark_stack)
 /* Mark stack */
 
+#define domain_field_caml_marking_done 104
 DOMAIN_STATE(uintnat, marking_done)
 /* Is marking done for the current major cycle. */
 
+#define domain_field_caml_sweeping_done 112
 DOMAIN_STATE(uintnat, sweeping_done)
 /* Is sweeping done for the current major cycle. */
 
+#define domain_field_caml_allocated_words 120
 DOMAIN_STATE(uintnat, allocated_words)
 
+#define domain_field_caml_swept_words 128
 DOMAIN_STATE(uintnat, swept_words)
 
+#define domain_field_caml_major_work_computed 136
 DOMAIN_STATE(intnat, major_work_computed)
 /* total work accumulated in this GC clock cycle (in words) */
 
+#define domain_field_caml_major_work_todo 144
 DOMAIN_STATE(intnat, major_work_todo)
 /* balance of work to do in this GC clock cycle (in words)
  *  positive: we need to do this amount of work to finish the slice
  *  negative: we have done more than we need and this is credit
  */
 
+#define domain_field_caml_major_gc_clock 152
 DOMAIN_STATE(double, major_gc_clock)
 
+#define domain_field_caml_local_roots 160
 DOMAIN_STATE(struct caml__roots_block*, local_roots)
 
+#define domain_field_caml_ephe_info 168
 DOMAIN_STATE(struct caml_ephe_info*, ephe_info)
 
+#define domain_field_caml_final_info 176
 DOMAIN_STATE(struct caml_final_info*, final_info)
 
+#define domain_field_caml_backtrace_pos 184
 DOMAIN_STATE(intnat, backtrace_pos)
 
+#define domain_field_caml_backtrace_active 192
 DOMAIN_STATE(intnat, backtrace_active)
 
+#define domain_field_caml_backtrace_buffer 200
 DOMAIN_STATE(backtrace_slot*, backtrace_buffer)
 
+#define domain_field_caml_backtrace_last_exn 208
 DOMAIN_STATE(value, backtrace_last_exn)
 
+#define domain_field_caml_compare_unordered 216
 DOMAIN_STATE(intnat, compare_unordered)
 
+#define domain_field_caml_oo_next_id_local 224
 DOMAIN_STATE(uintnat, oo_next_id_local)
 
+#define domain_field_caml_requested_major_slice 232
 DOMAIN_STATE(uintnat, requested_major_slice)
 
+#define domain_field_caml_requested_minor_gc 240
 DOMAIN_STATE(uintnat, requested_minor_gc)
 
+#define domain_field_caml_requested_external_interrupt 248
 DOMAIN_STATE(atomic_uintnat, requested_external_interrupt)
 
+#define domain_field_caml_parser_trace 256
 DOMAIN_STATE(int, parser_trace)
 /* See parsing.c */
 
+#define domain_field_caml_minor_heap_wsz 264
 DOMAIN_STATE(asize_t, minor_heap_wsz)
 
+#define domain_field_caml_shared_heap 272
 DOMAIN_STATE(struct caml_heap_state*, shared_heap)
 
+#define domain_field_caml_id 280
 DOMAIN_STATE(int, id)
 
+#define domain_field_caml_unique_id 288
 DOMAIN_STATE(int, unique_id)
 
+#define domain_field_caml_dls_root 296
 DOMAIN_STATE(value, dls_root)
 /* Domain-local state */
 
+#define domain_field_caml_extra_heap_resources 304
 DOMAIN_STATE(double, extra_heap_resources)
+#define domain_field_caml_extra_heap_resources_minor 312
 DOMAIN_STATE(double, extra_heap_resources_minor)
 
+#define domain_field_caml_dependent_size 320
 DOMAIN_STATE(uintnat, dependent_size)
+#define domain_field_caml_dependent_allocated 328
 DOMAIN_STATE(uintnat, dependent_allocated)
 
+#define domain_field_caml_extern_state 336
 DOMAIN_STATE(struct caml_extern_state*, extern_state)
+#define domain_field_caml_intern_state 344
 DOMAIN_STATE(struct caml_intern_state*, intern_state)
 
 /*****************************************************************************/
@@ -131,23 +175,35 @@ DOMAIN_STATE(struct caml_intern_state*, intern_state)
 /* These stats represent only the current domain's respective values. */
 /* Use the Gc module to get aggregated total program stats. */
 /*****************************************************************************/
+#define domain_field_caml_stat_minor_words 352
 DOMAIN_STATE(uintnat, stat_minor_words)
+#define domain_field_caml_stat_promoted_words 360
 DOMAIN_STATE(uintnat, stat_promoted_words)
+#define domain_field_caml_stat_major_words 368
 DOMAIN_STATE(uintnat, stat_major_words)
+#define domain_field_caml_stat_minor_collections 376
 DOMAIN_STATE(intnat, stat_minor_collections)
+#define domain_field_caml_stat_forced_major_collections 384
 DOMAIN_STATE(intnat, stat_forced_major_collections)
+#define domain_field_caml_stat_blocks_marked 392
 DOMAIN_STATE(uintnat, stat_blocks_marked)
 
+#define domain_field_caml_inside_stw_handler 400
 DOMAIN_STATE(int, inside_stw_handler)
 /* whether or not a domain is inside of a stop-the-world handler
    this is used for several debug assertions inside of methods
    that can only be called from either in or outside this state. */
 
+#define domain_field_caml_trap_sp_off 408
 DOMAIN_STATE(intnat, trap_sp_off)
+#define domain_field_caml_trap_barrier_off 416
 DOMAIN_STATE(intnat, trap_barrier_off)
+#define domain_field_caml_trap_barrier_block 424
 DOMAIN_STATE(int64_t, trap_barrier_block)
+#define domain_field_caml_external_raise 432
 DOMAIN_STATE(struct caml_exception_context*, external_raise)
 /* Bytecode TLS vars, not used for native code */
 
+#define domain_field_caml_extra_params 440
 DOMAIN_STATE(extra_params_area, extra_params)
 /* This member must occur last, because it is an array, not a scalar */

@@ -35,13 +35,13 @@ let word_addressed = false
     ra                     return address
     sp, gp, tp             stack pointer, global pointer, thread pointer
     a0-a7        0-7       arguments/results
-    s2-s9        8-15      arguments/results (preserved by C)
-    t2-t6        16-20     temporary
-    s0           21        general purpose (preserved by C)
-    t0, t1       22-23     temporaries (used by call veneers)
-    s1           24        trap pointer (preserved by C)
-    s10          25        allocation pointer (preserved by C)
-    s11          26        domain pointer (preserved by C)
+    s2-s6        8-12      arguments/results (preserved by C)
+    t2-t6        13-17     temporary
+    s0           18        general purpose (preserved by C)
+    t0, t1       19-20     temporaries (used by call veneers)
+    s1           21        trap pointer (preserved by C)
+    s7          22        allocation pointer (preserved by C)
+    s8          23        domain pointer (preserved by C)
 
   Floating-point register map
   ---------------------------
@@ -65,16 +65,20 @@ let word_addressed = false
 *)
 
 let int_reg_name =
-    [|"$t0"; "$t1"; "$t2"; "$t3"; "$t4"; "$t5"; "$t6"; "$t7"; "$t8";   (* 0- 8 *)
-      "$a0"; "$a1"; "$a2"; "$a3"; "$a4"; "$a5"; "$a6"; "$a7"; "$ra";     (* 9-17 *)
-      "$s0"; "$s1"; "$s2"; "$s3"; "$s4"; "$s5"; "$s6"; "$s7"; "$s8"|]   (* 18-26*)
+    [|"$a0"; "$a1"; "$a2"; "$a3"; "$a4"; "$a5"; "$a6"; "$a7";  (* 0- 7 *)
+      "$s2"; "$s3"; "$s4"; "$s5"; "$s6";                       (* 8-12*)
+      "$t2"; "$t3"; "$t4"; "$t5"; "$t6";                       (*13-17*)
+      "$s0";                                                   (*18*)
+      "$t0"; "$t1";                                            (*19-20*)
+      "$s1"; "$s7"; "$s8"                                      (*21-23*)
+    |]
 
 let float_reg_name =
-  [| "$fa0"; "$fa1"; "$fa2"; "$fa3"; "$fa4"; "$fa5"; "$fa6"; "$fa7";
-     "$fv0"; "$fv1";
-     "$ft0"; "$ft1"; "$ft2"; "$ft3"; "$ft4"; "$ft5"; "$ft6"; "$ft7";
-     "$ft8"; "$ft9"; "$ft10"; "$ft11"; "$ft12"; "$ft13"; "$ft14"; "$ft15";
-     "$fs0"; "$fs1"; "$fs2"; "$fs3"; "$fs4"; "$fs5"; "$fs6"; "$fs7" |]
+  [| "$ft0"; "$ft1"; "$ft2"; "$ft3"; "$ft4"; "$ft5"; "$ft6";"$ft7";     (*100-107*)
+     "$fs0"; "$fs1";                                              (*108-109*)
+     "$fa0"; "$fa1"; "$fa2"; "$fa3"; "$fa4"; "$fa5"; "$fa6"; "$fa7";    (*110-117*)
+     "$fs2"; "$fs3"; "$fs4"; "$fs5"; "$fs6"; "$fs7";                  (*118-123*)
+     "$ft8"; "$ft9"; "$ft10"; "$ft11";"$ft12";"$ft13";"$ft14";"$ft15"; |] (*124-131*)
 let num_register_classes = 2
 
 let register_class r =
@@ -82,7 +86,7 @@ let register_class r =
   | Val | Int | Addr -> 0
   | Float -> 1
 
-let num_available_registers = [| 27; 32 |]
+let num_available_registers = [| 19; 32 |]
 
 let first_available_register = [| 0; 100 |]
 
@@ -94,8 +98,8 @@ let rotate_registers = true
 (* Representation of hard registers by pseudo-registers *)
 
 let hard_int_reg =
-  let v = Array.make 28 Reg.dummy in
-  for i = 0 to 27 do
+  let v = Array.make 24 Reg.dummy in
+  for i = 0 to 23 do
     v.(i) <- Reg.at_location Int (Reg i)
   done;
   v
@@ -157,7 +161,7 @@ let outgoing ofs =
   else Domainstate (ofs + size_domainstate_args)
 let not_supported _ = fatal_error "Proc.loc_results: cannot call"
 
-let max_arguments_for_tailcalls = 16 (* in regs *) + 64 (* in domain state *)
+let max_arguments_for_tailcalls = 13 (* in regs *) + 64 (* in domain state *)
 
 (* OCaml calling convention:
      first integer args in a0 .. a7, s2 .. s9
@@ -166,17 +170,17 @@ let max_arguments_for_tailcalls = 16 (* in regs *) + 64 (* in domain state *)
    Return values in a0 .. a7, s2 .. s9 or fa0 .. fa7, fs2 .. fs9. *)
 
 let loc_arguments arg =
-  calling_conventions 9 16 100 107 outgoing (- size_domainstate_args) arg
+  calling_conventions 0 12 100 107 outgoing (- size_domainstate_args) arg
 
 let loc_parameters arg =
   let (loc, _ofs) =
-    calling_conventions 9 16 100 107 incoming (- size_domainstate_args) arg
+    calling_conventions 0 12 100 107 incoming (- size_domainstate_args) arg
   in
   loc
 
 let loc_results res =
   let (loc, _ofs) =
-    calling_conventions 9 16 100 107 not_supported 0 res
+    calling_conventions 0 12 100 107 not_supported 0 res
   in
   loc
 
@@ -220,10 +224,10 @@ let external_calling_conventions
 
 let loc_external_arguments ty_args =
   let arg = Cmm.machtype_of_exttype_list ty_args in
-  external_calling_conventions 9 16 100 107 outgoing arg
+  external_calling_conventions 0 7 100 107 outgoing arg
 
 let loc_external_results res =
-  let (loc, _ofs) = calling_conventions 9 10 100 101 not_supported 0 res
+  let (loc, _ofs) = calling_conventions 0 1 100 101 not_supported 0 res
   in loc
 
 (* Exceptions are in a0 *)
@@ -240,15 +244,14 @@ let destroyed_at_c_noalloc_call =
   (* s0-s11 and fs0-fs11 are callee-save, but s0 is
      used to preserve OCaml sp. *)
   Array.of_list(List.map phys_reg
-    [0; 1; 2; 3; 4; 5; 6; 7; 8; 9; 10; 11; 12; 13; 14; 15; 16; 17; 18;
-     100; 101; 102; 103; 104; 105; 106; 107; 108; 109; 110; 111; 112; 113; 114;
-     115; 116; 117; 118; 119; 120; 121; 122; 123])
-(* FIXME *)
+    [0; 1; 2; 3; 4; 5; 6; 7; 13; 14; 15; 16; 17; 18; (*s0*)
+     100; 101; 102; 103; 104; 105; 106; 107; 110; 111; 112; 113; 114; 115; 116;
+     117; 124; 125; 126; 127; 128; 129; 130; 131])
 
 let destroyed_at_alloc =
   (* t0-t6 are used for PLT stubs *)
-  if !Clflags.dlcode then Array.map phys_reg [|2; 3; 4; 5; 6; 7; 8|]
-  else [| phys_reg 16 |] (* t2 is used to pass the argument to caml_allocN *)
+    if !Clflags.dlcode then Array.map phys_reg [|13; 14; 15; 16; 17|]
+  else [| phys_reg 13 |] (* t2 is used to pass the argument to caml_allocN *)
 
 let destroyed_at_oper = function
   | Iop(Icall_ind | Icall_imm _) -> all_phys_regs
@@ -267,12 +270,12 @@ let destroyed_at_reloadretaddr = [| |]
 (* Maximal register pressure *)
 
 let safe_register_pressure = function
-  | Iextcall _ -> 21 (* s3 *)
-  | _ -> 1     (* t1 *)
+  | Iextcall _ -> 9 (* s3 *)
+  | _ -> 20     (* t1 *)
 
 let max_register_pressure = function
   | Iextcall _ -> [| 9; 12 |]
-  | _ -> [| 23; 30 |]
+  | _ -> [| 20; 30 |]
 
 (* Layout of the stack *)
 

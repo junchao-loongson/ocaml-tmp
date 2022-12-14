@@ -55,7 +55,7 @@ let slot_offset env loc cls =
 let emit_jump op s =
   if !Clflags.dlcode || !Clflags.pic_code
   then `{emit_string op}	%plt({emit_symbol s})`  (* FIXME *)
-  else `{emit_string op}	%plt({emit_symbol s})`  (* FIXME *)
+  else `{emit_string op}	{emit_symbol s}`  (* FIXME *)
 
 let emit_call = emit_jump "bl" 
 let emit_tail = emit_jump "bl" (* FIXME *)
@@ -78,14 +78,14 @@ let rodata_space =
 
 (* Names for special regs *)
 
-let reg_tmp = phys_reg 1 (* t1 *)
-let reg_tmp2 = phys_reg 0 (* t0 *)
-let reg_t2 = phys_reg 2 (* t2 *)
-let reg_domain_state_ptr = phys_reg 26 (* s8 *)
-let reg_trap_ptr = phys_reg 19 (* s1 *)
-let reg_alloc_ptr = phys_reg 25 (* s7 *)
-let reg_stack_arg_begin = phys_reg 21 (* s3 *)
-let reg_stack_arg_end = phys_reg 22 (* s4 *)
+let reg_tmp = phys_reg 20 (* t1 *)
+let reg_tmp2 = phys_reg 19 (* t0 *)
+let reg_t2 = phys_reg 13 (* t2 *)
+let reg_domain_state_ptr = phys_reg 23 (* s8 *)
+let reg_trap_ptr = phys_reg 21 (* s1 *)
+let reg_alloc_ptr = phys_reg 22 (* s7 *)
+let reg_stack_arg_begin = phys_reg 9 (* s3 *)
+let reg_stack_arg_end = phys_reg 10 (* s4 *)
 
 (* Output a pseudo-register *)
 
@@ -465,11 +465,12 @@ let emit_instr env i =
   | Lop(Iintop_imm(Isub, n)) ->
       `	addi.d	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, {emit_int(-n)}\n`
   | Lop(Iintop_imm(op, n)) ->
-      let instr = name_for_intop_imm op in
+      let instri = name_for_intop_imm op in
       if n<0 then  (* FIXME *)
-          ` addi.d   {emit_reg i.res.(0)}, $zero, {emit_int n}\n xor  {emit_reg i.res.(0)}, {emit_reg i.res.(0)}, {emit_reg i.arg.(0)} \n`
+          let instr = name_for_intop op in
+          ` addi.d   {emit_reg i.res.(0)}, $zero, {emit_int n}\n {emit_string instr}    {emit_reg i.res.(0)}, {emit_reg i.res.(0)}, {emit_reg i.arg.(0)} \n`
       else
-      `	{emit_string instr}	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, {emit_int n}\n`
+      `	{emit_string instri}	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, {emit_int n}\n`
   | Lop(Inegf | Iabsf as op) ->
       let instr = name_for_floatop1 op in
       `	{emit_string instr}	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}\n`
@@ -752,4 +753,3 @@ let end_assembly() =
       efa_def_label = (fun l -> `{emit_label l}:\n`);
       efa_string = (fun s -> emit_bytes_directive "	.byte	" (s ^ "\000"))
      }
-    `.end`
