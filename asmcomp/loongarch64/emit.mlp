@@ -468,7 +468,7 @@ let emit_instr env i =
       let instri = name_for_intop_imm op in
       if n<0 then  (* FIXME *)
           let instr = name_for_intop op in
-          ` addi.d   {emit_reg i.res.(0)}, $zero, {emit_int n}\n {emit_string instr}    {emit_reg i.res.(0)}, {emit_reg i.res.(0)}, {emit_reg i.arg.(0)} \n`
+          ` addi.d   {emit_reg reg_tmp}, $zero, {emit_int n}\n {emit_string instr}    {emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, {emit_reg reg_tmp} \n`
       else
       `	{emit_string instri}	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, {emit_int n}\n`
   | Lop(Inegf | Iabsf as op) ->

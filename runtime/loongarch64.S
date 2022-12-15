@@ -699,7 +699,7 @@ L(do_perform):
         ld.d      TMP, Handler_effect($t3)
         move      $a2, $a3                 /* a2 := last_fiber */
         move      $a3, TMP                /* a3 := effect handler */
-        bl    PLT(caml_apply3)
+        b    PLT(caml_apply3)       //(* FIXME *)
 1:
     /*  switch back to original performer before $raising Effect.Unhandled
         (no-op unless this is a reperform) */
