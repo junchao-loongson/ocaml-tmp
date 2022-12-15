@@ -170,17 +170,17 @@ let max_arguments_for_tailcalls = 13 (* in regs *) + 64 (* in domain state *)
    Return values in a0 .. a7, s2 .. s9 or fa0 .. fa7, fs2 .. fs9. *)
 
 let loc_arguments arg =
-  calling_conventions 0 12 100 107 outgoing (- size_domainstate_args) arg
+  calling_conventions 0 12 110 121 outgoing (- size_domainstate_args) arg
 
 let loc_parameters arg =
   let (loc, _ofs) =
-    calling_conventions 0 12 100 107 incoming (- size_domainstate_args) arg
+    calling_conventions 0 12 110 121 incoming (- size_domainstate_args) arg
   in
   loc
 
 let loc_results res =
   let (loc, _ofs) =
-    calling_conventions 0 12 100 107 not_supported 0 res
+    calling_conventions 0 12 110 121 not_supported 0 res
   in
   loc
 
@@ -224,10 +224,10 @@ let external_calling_conventions
 
 let loc_external_arguments ty_args =
   let arg = Cmm.machtype_of_exttype_list ty_args in
-  external_calling_conventions 0 7 100 107 outgoing arg
+  external_calling_conventions 0 7 110 117 outgoing arg
 
 let loc_external_results res =
-  let (loc, _ofs) = calling_conventions 0 1 100 101 not_supported 0 res
+  let (loc, _ofs) = calling_conventions 0 1 110 111 not_supported 0 res
   in loc
 
 (* Exceptions are in a0 *)
@@ -270,11 +270,11 @@ let destroyed_at_reloadretaddr = [| |]
 (* Maximal register pressure *)
 
 let safe_register_pressure = function
-  | Iextcall _ -> 9 (* s3 *)
-  | _ -> 20     (* t1 *)
+  | Iextcall _ -> 6  (*9-3*)
+  | _ -> 20
 
 let max_register_pressure = function
-  | Iextcall _ -> [| 9; 12 |]
+  | Iextcall _ -> [| 6; 8 |] (* 6 integer callee-saves, 8 FP callee-saves *)
   | _ -> [| 20; 30 |]
 
 (* Layout of the stack *)

@@ -58,7 +58,7 @@ let emit_jump op s =
   else `{emit_string op}	{emit_symbol s}`  (* FIXME *)
 
 let emit_call = emit_jump "bl" 
-let emit_tail = emit_jump "bl" (* FIXME *)
+let emit_tail = emit_jump "b" (* FIXME *)
 
 (* Output a label *)
 
