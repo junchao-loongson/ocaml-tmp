@@ -390,6 +390,7 @@ static value intern_alloc_obj(struct caml_intern_state* s, caml_domain_state* d,
   return Val_hp(p);
 }
 
+int intern_cnt = 0;
 static void intern_rec(struct caml_intern_state* s,
                        volatile value *dest)
 {
@@ -409,7 +410,7 @@ static void intern_rec(struct caml_intern_state* s,
 
   /* Initially let's try to read the first object from the stream */
   ReadItems(s, dest, 1);
-
+  fprintf(stderr, "intern:%d\n", intern_cnt++);
   /* The un-marshaler loop, the recursion is unrolled */
   while(sp != s->intern_stack) {
 

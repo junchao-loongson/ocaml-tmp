@@ -68,8 +68,6 @@
 
 //(* FIXME *)
 #define Caml_state(var) DOMAIN_STATE_PTR, domain_field_caml_##var
-//#define Caml_state_pre(var) la.got DOMAIN_STATE_PTR, domain_field_caml_##var
-#define Caml_state_pre(var)
 
 /* Globals and labels */
 #define L(lbl) .L##lbl
@@ -87,7 +85,6 @@ name:; \
 
 #if defined(__PIC__)
 #define PLT(r) %plt(r)
-// #define PLT(r) r
 #else
 #define PLT(r) r
 #endif
@@ -168,6 +165,7 @@ name:
         st.d      $s6, TMP, 14*8
         st.d      $t7, TMP, 15*8
         st.d      $t8, TMP, 16*8
+        st.d      $fp, TMP, 17*8
         st.d      $t2, TMP, 18*8
         st.d      $t3, TMP, 19*8
         st.d      $t4, TMP, 20*8
@@ -199,7 +197,7 @@ name:
         fst.d     $ft12, TMP, 44*8
         fst.d     $ft13, TMP, 45*8
         fst.d     $ft14, TMP, 46*8
-        fst.d     $ft14, TMP, 47*8
+        fst.d     $ft15, TMP, 47*8
         addi.d    TMP, TMP, 16
         st.d      TMP, Caml_state(gc_regs)
 .endm
@@ -226,6 +224,7 @@ name:
         ld.d      $s6, TMP, 14*8
         ld.d      $t7, TMP, 15*8
         ld.d      $t8, TMP, 16*8
+        ld.d      $fp, TMP, 17*8
         ld.d      $t2, TMP, 18*8
         ld.d      $t3, TMP, 19*8
         ld.d      $t4, TMP, 20*8
@@ -255,7 +254,7 @@ name:
         fld.d     $ft12, TMP, 44*8
         fld.d     $ft13, TMP, 45*8
         fld.d     $ft14, TMP, 46*8
-        fld.d     $ft14, TMP, 47*8
+        fld.d     $ft15, TMP, 47*8
     /* Put gc_regs struct back in bucket linked list */
         ld.d      TMP2, Caml_state(gc_regs_buckets)
 		st.d      TMP2, TMP, 0  /* next ptr */
@@ -440,6 +439,7 @@ L(jump_to_caml):
         st.d      $s6, $sp, 8*8
         st.d      $s7, $sp, 9*8
         st.d      $s8, $sp, 10*8
+        st.d      $fp, $sp, 11*8
         fst.d     $fs0, $sp, 14*8
         fst.d     $fs1, $sp, 15*8
         fst.d     $fs2, $sp, 16*8
@@ -472,7 +472,7 @@ L(jump_to_caml):
 		st.d      $sp, $t2, 0  /* C_stack_sp */
     /* Setup a trap frame to catch exceptions escaping the OCaml code */
         ld.d      $t3, Caml_state(exn_handler)
-        la.global      $t4, L(trap_handler)     //FIXME
+        la.local      $t4, L(trap_handler)     //FIXME
         addi.d    $t2, $t2, -16
 		st.d      $t3, $t2, 0 
 		st.d      $t4, $t2, 8 
@@ -518,6 +518,7 @@ L(return_result):
         ld.d      $s6, $sp, 8*8
         ld.d      $s7, $sp, 9*8
         ld.d      $s8, $sp, 10*8
+        ld.d      $fp, $sp, 11*8
         fld.d     $fs0, $sp, 14*8
         fld.d     $fs1, $sp, 15*8
         fld.d     $fs2, $sp, 16*8
@@ -770,7 +771,7 @@ FUNCTION(caml_runstack)
     /* Create an exception handler on the target stack
        after 16byte DWARF & gc_regs block (which is unused here) */
         addi.d    $t3, $t3, -32
-        la.global      TMP, L(fiber_exn_handler) //FIXME
+        la.local      TMP, L(fiber_exn_handler) //FIXME
 		st.d      TMP, $t3, 8 
     /* link the previous exn_handler so that copying stacks works */
         ld.d      TMP, Stack_exception($a0)

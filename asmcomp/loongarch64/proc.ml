@@ -70,7 +70,8 @@ let int_reg_name =
       "$t2"; "$t3"; "$t4"; "$t5"; "$t6";                       (*13-17*)
       "$s0";                                                   (*18*)
       "$t0"; "$t1";                                            (*19-20*)
-      "$s1"; "$s7"; "$s8"                                      (*21-23*)
+      "$s1"; "$s7"; "$s8";                                      (*21-23*)
+      "$fp"                                                     (*24*)
     |]
 
 let float_reg_name =
@@ -86,6 +87,7 @@ let register_class r =
   | Val | Int | Addr -> 0
   | Float -> 1
 
+(* first 19 int regs allocatable; all float regs allocatable *)
 let num_available_registers = [| 19; 32 |]
 
 let first_available_register = [| 0; 100 |]
@@ -98,8 +100,8 @@ let rotate_registers = true
 (* Representation of hard registers by pseudo-registers *)
 
 let hard_int_reg =
-  let v = Array.make 24 Reg.dummy in
-  for i = 0 to 23 do
+  let v = Array.make 25 Reg.dummy in
+  for i = 0 to 24 do
     v.(i) <- Reg.at_location Int (Reg i)
   done;
   v
@@ -164,10 +166,10 @@ let not_supported _ = fatal_error "Proc.loc_results: cannot call"
 let max_arguments_for_tailcalls = 13 (* in regs *) + 64 (* in domain state *)
 
 (* OCaml calling convention:
-     first integer args in a0 .. a7, s2 .. s9
+     first integer args in a0 .. a7, s2 .. s6
      first float args in fa0 .. fa7, fs2 .. fs9
      remaining args in domain state area, then on stack.
-   Return values in a0 .. a7, s2 .. s9 or fa0 .. fa7, fs2 .. fs9. *)
+   Return values in a0 .. a7, s2 .. s6 or fa0 .. fa7, fs2 .. fs9. *)
 
 let loc_arguments arg =
   calling_conventions 0 12 110 121 outgoing (- size_domainstate_args) arg
@@ -241,7 +243,7 @@ let regs_are_volatile _ = false
 (* Registers destroyed by operations *)
 
 let destroyed_at_c_noalloc_call =
-  (* s0-s11 and fs0-fs11 are callee-save, but s0 is
+  (* s0-s8 and fs0-fs7 are callee-save, but s0 is
      used to preserve OCaml sp. *)
   Array.of_list(List.map phys_reg
     [0; 1; 2; 3; 4; 5; 6; 7; 13; 14; 15; 16; 17; 18; (*s0*)
@@ -270,8 +272,8 @@ let destroyed_at_reloadretaddr = [| |]
 (* Maximal register pressure *)
 
 let safe_register_pressure = function
-  | Iextcall _ -> 6  (*9-3*)
-  | _ -> 20
+  | Iextcall _ -> 6  (*9-3 s0-s8 - s7 - s8 - s1*)
+  | _ -> 20     (* FIXME *)
 
 let max_register_pressure = function
   | Iextcall _ -> [| 6; 8 |] (* 6 integer callee-saves, 8 FP callee-saves *)
@@ -286,10 +288,6 @@ let frame_required fd =
 
 let prologue_required fd =
   frame_required fd
-
-(* See
-   https://github.com/loongarch64-non-isa/loongarch64-elf-psabi-doc/blob/master/loongarch64-elf.adoc
-*)
 
 let int_dwarf_reg_numbers =
   [| 10; 11; 12; 13; 14; 15; 16; 17;

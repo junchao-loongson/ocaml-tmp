@@ -54,7 +54,7 @@ let slot_offset env loc cls =
 
 let emit_jump op s =
   if !Clflags.dlcode || !Clflags.pic_code
-  then `{emit_string op}	%plt({emit_symbol s})`  (* FIXME *)
+  then `{emit_string op}	%plt({emit_symbol s})`  (* FIXME plt*)
   else `{emit_string op}	{emit_symbol s}`  (* FIXME *)
 
 let emit_call = emit_jump "bl" 
@@ -254,7 +254,7 @@ let emit_instr env i =
       let n = frame_size env in
       emit_stack_adjustment (-n);
       if env.f.fun_contains_calls then begin
-        store_ra n;
+        store_ra n; (* FIXME *)
         cfi_offset ~reg:1 (* ra *) ~offset:(-8)
       end;
   | Lop(Imove | Ispill | Ireload) ->
@@ -266,7 +266,7 @@ let emit_instr env i =
         | {loc = Reg _; typ = Float}, {loc = Reg _; typ = Float} ->
             `	fmov.d   {emit_reg dst}, {emit_reg src}\n`
         | {loc = Reg _; typ = Float}, {loc = Reg _; typ = (Val | Int | Addr)} ->    (* FIXME *)
-            `	fmv.x.d {emit_reg dst}, {emit_reg src}\n`
+               `  fmv.x.d {emit_reg dst}, {emit_reg src}\n`
         | {loc = Reg _; typ = (Val | Int | Addr)}, {loc = Stack s} ->
             let (base, ofs) = slot_offset env s (register_class dst) in
             emit_store src ofs base
@@ -288,7 +288,7 @@ let emit_instr env i =
   | Lop(Iconst_float f) ->
       let lbl = new_label() in
       env.float_literals <- {fl=f; lbl} :: env.float_literals;
-      `la.global {emit_reg reg_tmp}, {emit_label lbl} \n`;      (* FIXME *)
+      `la.local {emit_reg reg_tmp}, {emit_label lbl} \n`;      (* FIXME *)
       `	fld.d	{emit_reg i.res.(0)}, {emit_reg reg_tmp}, 0\n`
   | Lop(Iconst_symbol s) ->
       `	la.global	{emit_reg i.res.(0)}, {emit_symbol s}\n`    (* FIXME *)
@@ -468,7 +468,7 @@ let emit_instr env i =
       let instri = name_for_intop_imm op in
       if n<0 then  (* FIXME *)
           let instr = name_for_intop op in
-          ` addi.d   {emit_reg reg_tmp}, $zero, {emit_int n}\n {emit_string instr}    {emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, {emit_reg reg_tmp} \n`
+          ` addi.d   {emit_reg reg_tmp2}, $zero, {emit_int n}\n {emit_string instr}    {emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, {emit_reg reg_tmp2} \n`
       else
       `	{emit_string instri}	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, {emit_int n}\n`
   | Lop(Inegf | Iabsf as op) ->
@@ -478,11 +478,11 @@ let emit_instr env i =
       let instr = name_for_floatop2 op in
       `	{emit_string instr}	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, {emit_reg i.arg.(1)}\n`
   | Lop(Ifloatofint) ->     (* FIXME *)
-      ` movgr2fr.d  $ft7, {emit_reg i.arg.(0)} \n`;
-      `	ffint.d.l	{emit_reg i.res.(0)}, $ft7\n`
+      ` movgr2fr.d  $ft0, {emit_reg i.arg.(0)} \n`;
+      `	ffint.d.l	{emit_reg i.res.(0)}, $ft0\n`
   | Lop(Iintoffloat) ->
-      `	ftintrz.l.d	$ft7, {emit_reg i.arg.(0)}\n`;
-      ` movfr2gr.d  {emit_reg i.res.(0)}, $ft7 \n`
+      `	ftintrz.l.d	$ft0, {emit_reg i.arg.(0)}\n`;
+      ` movfr2gr.d  {emit_reg i.res.(0)}, $ft0 \n`
   | Lop(Iopaque) ->
       assert (i.arg.(0).loc = i.res.(0).loc)
   | Lop(Ispecific sop) ->
@@ -555,9 +555,9 @@ let emit_instr env i =
       | None -> ()
       | Some lbl -> `	bgtz	{emit_reg reg_tmp}, {emit_label lbl}\n`
       end
-  | Lswitch jumptbl ->
+  | Lswitch jumptbl ->      (* FIXME *)
       let lbl = new_label() in
-      `	la.global	{emit_reg reg_tmp}, {emit_label lbl}\n`;    (* FIXME *)
+      `	la.local	{emit_reg reg_tmp}, {emit_label lbl}\n`;    (* FIXME *)
       `	slli.d	$t0, {emit_reg i.arg.(0)}, 2\n`;
       `	add.d	{emit_reg reg_tmp}, {emit_reg reg_tmp}, $t0\n`;
       `	jr	{emit_reg reg_tmp}\n`;
@@ -573,7 +573,7 @@ let emit_instr env i =
       cfi_adjust_cfa_offset delta;
       env.stack_offset <- env.stack_offset + delta
   | Lpushtrap {lbl_handler} ->      (* FIXME *)
-      `	la.global	{emit_reg reg_tmp}, {emit_label lbl_handler}\n`;
+      `	la.local	{emit_reg reg_tmp}, {emit_label lbl_handler}\n`;
       `	addi.d	$sp, $sp, -16\n`;
       env.stack_offset <- env.stack_offset + 16;
       `	st.d	{emit_reg reg_trap_ptr}, $sp, 0\n`;

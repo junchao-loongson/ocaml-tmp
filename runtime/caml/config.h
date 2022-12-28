@@ -189,7 +189,7 @@ typedef uint64_t uintnat;
    [Page_size] must be a multiple of [sizeof (value)].
    [Page_log] must be be >= 8 and <= 20.
    Do not change the definition of [Page_size]. */
-#define Page_log 12             /* A page is 4 kilobytes. */
+#define Page_log 11             /* A page is 4 kilobytes. */
 #define Page_size (1 << Page_log)
 
 /* Initial size of stack (bytes). */

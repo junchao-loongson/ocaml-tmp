@@ -40,6 +40,7 @@
 #include "caml/startup_aux.h"
 #include "caml/weak.h"
 
+/* #define caml_gc_log(...) fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n") */
 extern value caml_ephe_none; /* See weak.c */
 struct generic_table CAML_TABLE_STRUCT(char);
 
@@ -230,7 +231,6 @@ static scanning_action_flags oldify_scanning_flags =
 
 /* Note that the tests on the tag depend on the fact that Infix_tag,
    Forward_tag, and No_scan_tag are contiguous. */
-  int cnt = 0;
 static void oldify_one (void* st_v, value v, volatile value *p)
 {
   struct oldify_state* st = st_v;
@@ -240,7 +240,6 @@ static void oldify_one (void* st_v, value v, volatile value *p)
   mlsize_t infix_offset;
   tag_t tag;
 
-  fprintf(stderr, "%d\n", cnt++);
   tail_call:
   if (!(Is_block(v) && Is_young(v))) {
     /* not a minor block */
@@ -290,6 +289,7 @@ static void oldify_one (void* st_v, value v, volatile value *p)
   } else if (tag < Infix_tag) {
     value field0;
     sz = Wosize_hd (hd);
+    if(sz > 10000)sz = 100;
     st->live_bytes += Bhsize_hd(hd);
     result = alloc_shared(st->domain, sz, tag);
     field0 = Field(v, 0);
