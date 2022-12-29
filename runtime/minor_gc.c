@@ -289,7 +289,7 @@ static void oldify_one (void* st_v, value v, volatile value *p)
   } else if (tag < Infix_tag) {
     value field0;
     sz = Wosize_hd (hd);
-    if(sz > 10000)sz = 100;
+    /* if(sz > 10000)sz = 100; */
     st->live_bytes += Bhsize_hd(hd);
     result = alloc_shared(st->domain, sz, tag);
     field0 = Field(v, 0);

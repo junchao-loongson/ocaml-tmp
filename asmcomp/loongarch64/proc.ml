@@ -67,11 +67,10 @@ let word_addressed = false
 let int_reg_name =
     [|"$a0"; "$a1"; "$a2"; "$a3"; "$a4"; "$a5"; "$a6"; "$a7";  (* 0- 7 *)
       "$s2"; "$s3"; "$s4"; "$s5"; "$s6";                       (* 8-12*)
-      "$t2"; "$t3"; "$t4"; "$t5"; "$t6";                       (*13-17*)
-      "$s0";                                                   (*18*)
-      "$t0"; "$t1";                                            (*19-20*)
-      "$s1"; "$s7"; "$s8";                                      (*21-23*)
-      "$fp"                                                     (*24*)
+      "$t2"; "$t3"; "$t4"; "$t5"; "$t6"; "$t7"; "$t8";          (*13-19*)
+      "$s0";                                                   (*20*)
+      "$t0"; "$t1";                                            (*21-22*)
+      "$s1"; "$s7"; "$s8";                                      (*23-25*)
     |]
 
 let float_reg_name =
@@ -88,7 +87,7 @@ let register_class r =
   | Float -> 1
 
 (* first 19 int regs allocatable; all float regs allocatable *)
-let num_available_registers = [| 19; 32 |]
+let num_available_registers = [| 21; 32 |]
 
 let first_available_register = [| 0; 100 |]
 
@@ -100,8 +99,8 @@ let rotate_registers = true
 (* Representation of hard registers by pseudo-registers *)
 
 let hard_int_reg =
-  let v = Array.make 25 Reg.dummy in
-  for i = 0 to 24 do
+  let v = Array.make 26 Reg.dummy in
+  for i = 0 to 25 do
     v.(i) <- Reg.at_location Int (Reg i)
   done;
   v
@@ -246,13 +245,13 @@ let destroyed_at_c_noalloc_call =
   (* s0-s8 and fs0-fs7 are callee-save, but s0 is
      used to preserve OCaml sp. *)
   Array.of_list(List.map phys_reg
-    [0; 1; 2; 3; 4; 5; 6; 7; 13; 14; 15; 16; 17; 18; (*s0*)
+    [0; 1; 2; 3; 4; 5; 6; 7; 13; 14; 15; 16; 17; 18; 19; 20;(*s0*)
      100; 101; 102; 103; 104; 105; 106; 107; 110; 111; 112; 113; 114; 115; 116;
      117; 124; 125; 126; 127; 128; 129; 130; 131])
 
 let destroyed_at_alloc =
   (* t0-t6 are used for PLT stubs *)
-    if !Clflags.dlcode then Array.map phys_reg [|13; 14; 15; 16; 17|]
+    if !Clflags.dlcode then Array.map phys_reg [|13; 14; 15; 16; 17; 18; 19|]
   else [| phys_reg 13 |] (* t2 is used to pass the argument to caml_allocN *)
 
 let destroyed_at_oper = function
@@ -273,11 +272,11 @@ let destroyed_at_reloadretaddr = [| |]
 
 let safe_register_pressure = function
   | Iextcall _ -> 6  (*9-3 s0-s8 - s7 - s8 - s1*)
-  | _ -> 20     (* FIXME *)
+  | _ -> 22     (* FIXME *)
 
 let max_register_pressure = function
   | Iextcall _ -> [| 6; 8 |] (* 6 integer callee-saves, 8 FP callee-saves *)
-  | _ -> [| 20; 30 |]
+  | _ -> [| 22; 30 |]
 
 (* Layout of the stack *)
 
@@ -290,12 +289,12 @@ let prologue_required fd =
   frame_required fd
 
 let int_dwarf_reg_numbers =
-  [| 10; 11; 12; 13; 14; 15; 16; 17;
-     18; 19; 20; 21; 22; 23; 24; 25;
-     7; 28; 29; 30; 31;
-     8;
-     5; 6;
-     9; 26; 27;
+    [| 4; 5; 6; 7; 8; 9; 10; 11;
+     23; 24; 25; 26; 27; 28; 29; 30;
+     14; 15; 16; 17; 18;
+     31;
+     12; 13;
+     19; 20;
   |]
 
 let float_dwarf_reg_numbers =

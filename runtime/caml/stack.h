@@ -85,7 +85,7 @@
 #ifdef TARGET_loongarch64
 /* Size of the gc_regs structure, in words.
    See riscv.S and riscv/proc.ml for the indices */
-#define Wosize_gc_regs (2 + 22 /* int regs */ + 24 /* float regs */)
+#define Wosize_gc_regs (2 + 24 /* int regs */ + 26 /* float regs */)
 #define Saved_return_address(sp) *((intnat *)((sp) - 8))
 /* RISC-V does not use a frame pointer, but requires the stack to be
    16-aligned, so when pushing the return address to the stack there

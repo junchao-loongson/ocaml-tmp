@@ -189,18 +189,18 @@ typedef uint64_t uintnat;
    [Page_size] must be a multiple of [sizeof (value)].
    [Page_log] must be be >= 8 and <= 20.
    Do not change the definition of [Page_size]. */
-#define Page_log 11             /* A page is 4 kilobytes. */
+#define Page_log 14             /* A page is 4 kilobytes. */
 #define Page_size (1 << Page_log)
 
 /* Initial size of stack (bytes). */
 #ifdef DEBUG
 #define Stack_init_bsize (64 * sizeof(value))
 #else
-#define Stack_init_bsize (4096 * sizeof(value))
+#define Stack_init_bsize (10 * 4096 * sizeof(value))
 #endif
 
 /* Minimum free size of stack (bytes); below that, it is reallocated. */
-#define Stack_threshold_words 32
+#define Stack_threshold_words 64
 #define Stack_threshold (Stack_threshold_words * sizeof(value))
 
 /* Number of words used in the control structure at the start of a stack
@@ -213,12 +213,12 @@ typedef uint64_t uintnat;
 
 /* Default maximum size of the stack (words). */
 /* (1 Gib for 64-bit platforms, 512 Mib for 32-bit platforms) */
-#define Max_stack_def (128 * 1024 * 1024)
+#define Max_stack_def (128 * 1024 * 1024 * 10)
 
 
 /* Maximum size of a block allocated in the young generation (words). */
 /* Must be > 4 */
-#define Max_young_wosize 256
+#define Max_young_wosize 2560
 #define Max_young_whsize (Whsize_wosize (Max_young_wosize))
 
 
@@ -253,7 +253,7 @@ typedef uint64_t uintnat;
 
 /* Default setting for the ratio of custom garbage to minor heap size.
    Documented in gc.mli */
-#define Custom_minor_ratio_def 100
+#define Custom_minor_ratio_def 50
 
 /* Default setting for maximum size of custom objects counted as garbage
    in the minor heap.
