@@ -28,9 +28,9 @@ open Emitenv
 
 let frame_size env =
   let size =
-    env.stack_offset +                     (* Trap frame, outgoing parameters *)
+    env.stack_offset  +                    (* Trap frame, outgoing parameters *)
     size_int * env.f.fun_num_stack_slots.(0) +    (* Local int variables *)
-    size_float * env.f.fun_num_stack_slots.(1) +  (* Local float variables *)
+    size_float * env.f.fun_num_stack_slots.(1)+  (* Local float variables *)
     (if env.f.fun_contains_calls then size_addr else 0) (* Return address *)
   in
   Misc.align size 16
@@ -54,11 +54,11 @@ let slot_offset env loc cls =
 
 let emit_jump op s =
   if !Clflags.dlcode || !Clflags.pic_code
-  then `{emit_string op}	%plt({emit_symbol s})`  (* FIXME plt*)
-  else `{emit_string op}	{emit_symbol s}`  (* FIXME *)
+  then `{emit_string op}	%plt({emit_symbol s})`
+  else `{emit_string op}	{emit_symbol s}`
 
-let emit_call = emit_jump "bl" 
-let emit_tail = emit_jump "b" (* FIXME *)
+let emit_call = emit_jump "bl"
+let emit_tail = emit_jump "b"
 
 (* Output a label *)
 
@@ -78,14 +78,14 @@ let rodata_space =
 
 (* Names for special regs *)
 
-let reg_tmp = phys_reg 22 (* t1 *)
-let reg_tmp2 = phys_reg 21 (* t0 *)
-let reg_t2 = phys_reg 13 (* t2 *)
-let reg_domain_state_ptr = phys_reg 25 (* s8 *)
-let reg_trap_ptr = phys_reg 23 (* s1 *)
-let reg_alloc_ptr = phys_reg 24 (* s7 *)
-let reg_stack_arg_begin = phys_reg 9 (* s3 *)
-let reg_stack_arg_end = phys_reg 10 (* s4 *)
+let reg_tmp = phys_reg 22               (* t1 *)
+let reg_tmp2 = phys_reg 21              (* t0 *)
+let reg_t2 = phys_reg 13                (* t2 *)
+let reg_domain_state_ptr = phys_reg 25  (* s8 *)
+let reg_trap_ptr = phys_reg 23          (* s1 *)
+let reg_alloc_ptr = phys_reg 24         (* s7 *)
+let reg_stack_arg_begin = phys_reg 9    (* s3 *)
+let reg_stack_arg_end = phys_reg 10     (* s4 *)
 
 (* Output a pseudo-register *)
 
@@ -254,7 +254,7 @@ let emit_instr env i =
       let n = frame_size env in
       emit_stack_adjustment (-n);
       if env.f.fun_contains_calls then begin
-        store_ra n; (* FIXME *)
+        store_ra n;
         cfi_offset ~reg:1 (* ra *) ~offset:(-8)
       end;
   | Lop(Imove | Ispill | Ireload) ->
@@ -444,7 +444,7 @@ let emit_instr env i =
           `	sltui	{emit_reg i.res.(0)}, {emit_reg i.res.(0)}, 1\n`
       | Isigned Cne | Iunsigned Cne ->
           `	sub.d	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, {emit_reg i.arg.(1)}\n`;
-          `	sltu	{emit_reg i.res.(0)}, $zero, {emit_reg i.res.(0)}\n`   (* FIXME *)
+          `	sltu	{emit_reg i.res.(0)}, $zero, {emit_reg i.res.(0)}\n`
       | Iunsigned Clt ->
           `	sltu	{emit_reg i.res.(0)}, {emit_reg i.arg.(0)}, {emit_reg i.arg.(1)}\n`
       | Iunsigned Cge ->
@@ -558,8 +558,8 @@ let emit_instr env i =
   | Lswitch jumptbl ->      (* FIXME *)
       let lbl = new_label() in
       `	la.local	{emit_reg reg_tmp}, {emit_label lbl}\n`;    (* FIXME *)
-      `	slli.d	$t0, {emit_reg i.arg.(0)}, 2\n`;
-      `	add.d	{emit_reg reg_tmp}, {emit_reg reg_tmp}, $t0\n`;
+      `	slli.d	{emit_reg reg_tmp2}, {emit_reg i.arg.(0)}, 2\n`;
+      `	add.d	{emit_reg reg_tmp}, {emit_reg reg_tmp}, {emit_reg reg_tmp2}\n`;
       `	jr	{emit_reg reg_tmp}\n`;
       `{emit_label lbl}:\n`;
       for i = 0 to Array.length jumptbl - 1 do
@@ -732,7 +732,7 @@ let end_assembly() =
   `	{emit_string data_space}\n`;
   let lbl_end = Compilenv.make_symbol (Some "data_end") in
   declare_global_data lbl_end;
-  `	.quad	0\n`; (* PR#6329 *)
+  `    .quad   0\n`; (* PR#6329 *)
   `{emit_symbol lbl_end}:\n`;
   `	.quad	0\n`;
   (* Emit the frame descriptors *)

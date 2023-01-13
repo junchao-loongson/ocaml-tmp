@@ -213,9 +213,6 @@ let external_calling_conventions
         if !float <= last_float then begin
           loc.(i) <- [| phys_reg !float |];
           incr float
-        end else if !int <= last_int then begin
-          loc.(i) <- [| phys_reg !int |];
-          incr int
         end else begin
           loc.(i) <- [| stack_slot (make_stack !ofs) Float |];
           ofs := !ofs + size_float
@@ -262,7 +259,8 @@ let destroyed_at_oper = function
       else destroyed_at_c_noalloc_call
   | Iop(Ialloc _) | Iop(Ipoll _) -> destroyed_at_alloc
   | Iop(Istore(Single, _, _)) -> [| phys_reg 100 |]
-  | _ -> [||]
+  | Iop(Ifloatofint | Iintoffloat) -> [| phys_reg 100 |]
+  | _ -> [| |]
 
 let destroyed_at_raise = all_phys_regs
 
@@ -271,12 +269,12 @@ let destroyed_at_reloadretaddr = [| |]
 (* Maximal register pressure *)
 
 let safe_register_pressure = function
-  | Iextcall _ -> 6  (*9-3 s0-s8 - s7 - s8 - s1*)
-  | _ -> 22     (* FIXME *)
+  | Iextcall _ -> 5  (*9-3 s0~s8 - s7 - s8 - s1 - s0*)
+  | _ -> 21     (* FIXME *)
 
 let max_register_pressure = function
-  | Iextcall _ -> [| 6; 8 |] (* 6 integer callee-saves, 8 FP callee-saves *)
-  | _ -> [| 22; 30 |]
+  | Iextcall _ -> [| 5; 8 |] (* 6 integer callee-saves, 8 FP callee-saves *)
+  | _ -> [| 21; 30 |]
 
 (* Layout of the stack *)
 

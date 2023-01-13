@@ -39,7 +39,6 @@
 #ifdef USE_MMAP_MAP_STACK
 #include <sys/mman.h>
 #endif
-#define DEBUG 1
 #ifdef DEBUG
 /* #define fiber_debug_log(...) caml_gc_log(__VA_ARGS__) */
 #define fiber_debug_log(...) fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n");

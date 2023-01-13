@@ -163,41 +163,40 @@ name:
         st.d      $s4, TMP, 12*8
         st.d      $s5, TMP, 13*8
         st.d      $s6, TMP, 14*8
-        st.d      $t7, TMP, 15*8
-        st.d      $t8, TMP, 16*8
-        st.d      $fp, TMP, 17*8
-        st.d      $t2, TMP, 18*8
-        st.d      $t3, TMP, 19*8
-        st.d      $t4, TMP, 20*8
-        st.d      $t5, TMP, 21*8
-        st.d      $t6, TMP, 22*8
-        st.d      $s0, TMP, 23*8
+        st.d      $t2, TMP, 15*8
+        st.d      $t3, TMP, 16*8
+        st.d      $t4, TMP, 17*8
+        st.d      $t5, TMP, 18*8
+        st.d      $t6, TMP, 19*8
+        st.d      $t7, TMP, 20*8
+        st.d      $t8, TMP, 21*8
+        st.d      $s0, TMP, 22*8
     /* Save caller-save floating-point registers
        (callee-saves are preserved by C functions) */
-        fst.d     $ft0, TMP, 24*8
-        fst.d     $ft1, TMP, 25*8
-        fst.d     $ft2, TMP, 26*8
-        fst.d     $ft3, TMP, 27*8
-        fst.d     $ft4, TMP, 28*8
-        fst.d     $ft5, TMP, 29*8
-        fst.d     $ft6, TMP, 30*8
-        fst.d     $ft7, TMP, 31*8
-        fst.d     $fa0, TMP, 32*8
-        fst.d     $fa1, TMP, 33*8
-        fst.d     $fa2, TMP, 34*8
-        fst.d     $fa3, TMP, 35*8
-        fst.d     $fa4, TMP, 36*8
-        fst.d     $fa5, TMP, 37*8
-        fst.d     $fa6, TMP, 38*8
-        fst.d     $fa7, TMP, 39*8
-        fst.d     $ft8, TMP, 40*8
-        fst.d     $ft9, TMP, 41*8
-        fst.d     $ft10, TMP, 42*8
-        fst.d     $ft11, TMP, 43*8
-        fst.d     $ft12, TMP, 44*8
-        fst.d     $ft13, TMP, 45*8
-        fst.d     $ft14, TMP, 46*8
-        fst.d     $ft15, TMP, 47*8
+        fst.d     $ft0, TMP, 23*8
+        fst.d     $ft1, TMP, 24*8
+        fst.d     $ft2, TMP, 25*8
+        fst.d     $ft3, TMP, 26*8
+        fst.d     $ft4, TMP, 27*8
+        fst.d     $ft5, TMP, 28*8
+        fst.d     $ft6, TMP, 29*8
+        fst.d     $ft7, TMP, 30*8
+        fst.d     $fa0, TMP, 31*8
+        fst.d     $fa1, TMP, 32*8
+        fst.d     $fa2, TMP, 33*8
+        fst.d     $fa3, TMP, 34*8
+        fst.d     $fa4, TMP, 35*8
+        fst.d     $fa5, TMP, 36*8
+        fst.d     $fa6, TMP, 37*8
+        fst.d     $fa7, TMP, 38*8
+        fst.d     $ft8, TMP, 39*8
+        fst.d     $ft9, TMP, 40*8
+        fst.d     $ft10, TMP, 41*8
+        fst.d     $ft11, TMP, 42*8
+        fst.d     $ft12, TMP, 43*8
+        fst.d     $ft13, TMP, 44*8
+        fst.d     $ft14, TMP, 45*8
+        fst.d     $ft15, TMP, 46*8
         addi.d    TMP, TMP, 16
         st.d      TMP, Caml_state(gc_regs)
 .endm
@@ -222,39 +221,38 @@ name:
         ld.d      $s4, TMP, 12*8
         ld.d      $s5, TMP, 13*8
         ld.d      $s6, TMP, 14*8
-        ld.d      $t7, TMP, 15*8
-        ld.d      $t8, TMP, 16*8
-        ld.d      $fp, TMP, 17*8
-        ld.d      $t2, TMP, 18*8
-        ld.d      $t3, TMP, 19*8
-        ld.d      $t4, TMP, 20*8
-        ld.d      $t5, TMP, 21*8
-        ld.d      $t6, TMP, 22*8
-        ld.d      $s0, TMP, 23*8
-        fld.d     $ft0, TMP, 24*8
-        fld.d     $ft1, TMP, 25*8
-        fld.d     $ft2, TMP, 26*8
-        fld.d     $ft3, TMP, 27*8
-        fld.d     $ft4, TMP, 28*8
-        fld.d     $ft5, TMP, 29*8
-        fld.d     $ft6, TMP, 30*8
-        fld.d     $ft7, TMP, 31*8
-        fld.d     $fa0, TMP, 32*8
-        fld.d     $fa1, TMP, 33*8
-        fld.d     $fa2, TMP, 34*8
-        fld.d     $fa3, TMP, 35*8
-        fld.d     $fa4, TMP, 36*8
-        fld.d     $fa5, TMP, 37*8
-        fld.d     $fa6, TMP, 38*8
-        fld.d     $fa7, TMP, 39*8
-        fld.d     $ft8, TMP, 40*8
-        fld.d     $ft9, TMP, 41*8
-        fld.d     $ft10, TMP, 42*8
-        fld.d     $ft11, TMP, 43*8
-        fld.d     $ft12, TMP, 44*8
-        fld.d     $ft13, TMP, 45*8
-        fld.d     $ft14, TMP, 46*8
-        fld.d     $ft15, TMP, 47*8
+        ld.d      $t2, TMP, 15*8
+        ld.d      $t3, TMP, 16*8
+        ld.d      $t4, TMP, 17*8
+        ld.d      $t5, TMP, 18*8
+        ld.d      $t6, TMP, 19*8
+        ld.d      $t7, TMP, 20*8
+        ld.d      $t8, TMP, 21*8
+        ld.d      $s0, TMP, 22*8
+        fld.d     $ft0, TMP, 23*8
+        fld.d     $ft1, TMP, 24*8
+        fld.d     $ft2, TMP, 25*8
+        fld.d     $ft3, TMP, 26*8
+        fld.d     $ft4, TMP, 27*8
+        fld.d     $ft5, TMP, 28*8
+        fld.d     $ft6, TMP, 29*8
+        fld.d     $ft7, TMP, 30*8
+        fld.d     $fa0, TMP, 31*8
+        fld.d     $fa1, TMP, 32*8
+        fld.d     $fa2, TMP, 33*8
+        fld.d     $fa3, TMP, 34*8
+        fld.d     $fa4, TMP, 35*8
+        fld.d     $fa5, TMP, 36*8
+        fld.d     $fa6, TMP, 37*8
+        fld.d     $fa7, TMP, 38*8
+        fld.d     $ft8, TMP, 39*8
+        fld.d     $ft9, TMP, 40*8
+        fld.d     $ft10, TMP, 41*8
+        fld.d     $ft11, TMP, 42*8
+        fld.d     $ft12, TMP, 43*8
+        fld.d     $ft13, TMP, 44*8
+        fld.d     $ft14, TMP, 45*8
+        fld.d     $ft15, TMP, 46*8
     /* Put gc_regs struct back in bucket linked list */
         ld.d      TMP2, Caml_state(gc_regs_buckets)
 		st.d      TMP2, TMP, 0  /* next ptr */
@@ -455,7 +453,7 @@ L(jump_to_caml):
     /* Build (16-byte aligned) struct c_stack_link on the C stack */
         ld.d      $t2, Caml_state(c_stack)
         addi.d    $sp, $sp, -32
-        st.d      $t2, Cstack_prev($sp)
+        st.d      $t2, Cstack_prev($sp)       /*FIXME*/
         st.d      $zero, Cstack_stack($sp)
         st.d      $zero, Cstack_sp($sp)
         CFI_ADJUST(32)
@@ -472,7 +470,7 @@ L(jump_to_caml):
 		st.d      $sp, $t2, 0  /* C_stack_sp */
     /* Setup a trap frame to catch exceptions escaping the OCaml code */
         ld.d      $t3, Caml_state(exn_handler)
-        la.local      $t4, L(trap_handler)     //FIXME
+        la.local      $t4, L(trap_handler)
         addi.d    $t2, $t2, -16
 		st.d      $t3, $t2, 0 
 		st.d      $t4, $t2, 8 
